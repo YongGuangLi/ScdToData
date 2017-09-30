@@ -80,7 +80,7 @@ int ScdToData::InitCfgFile(QString csInitFile,QList<QString> &lstErrors)
             {
                 if (settings->value(FCkeys.at(i)).toString() == "1")
                 {
-                    mapFCFilterType[FCkeys.at(i)] = settings->value(FCkeys.at(i)).toString();
+                    mapFilterFcType[FCkeys.at(i)] = settings->value(FCkeys.at(i)).toString();
                 }
             }
             settings->endGroup();
@@ -89,9 +89,19 @@ int ScdToData::InitCfgFile(QString csInitFile,QList<QString> &lstErrors)
             QStringList IEDTypekeys = settings->allKeys();
             for(int i = 0; i < IEDTypekeys.size(); ++i)
             {
-                mapIEDFilterType[IEDTypekeys.at(i)] = settings->value(IEDTypekeys.at(i)).toString();
+                mapIedType[IEDTypekeys.at(i)] = settings->value(IEDTypekeys.at(i)).toString();
             }
             settings->endGroup();
+
+            settings->beginGroup("CDC");
+            QStringList CdcTypekeys = settings->allKeys();
+            for(int i = 0; i < CdcTypekeys.size(); ++i)
+            {
+                mapCdcType[CdcTypekeys.at(i)] = settings->value(CdcTypekeys.at(i)).toString();
+                qDebug()<<settings->value(CdcTypekeys.at(i)).toString();
+            }
+            settings->endGroup();
+
         }
         file.close();
         return 1;
@@ -174,9 +184,9 @@ void ScdToData::parseIED(QXmlStreamReader &xmlReader)
         tmpList[1]  = QString::number(tmpList.at(1).toInt() + 1);
         mapIedData[Cur_Parse_IED_Name_].IpB_ = tmpList.join(".");
     }
-    if(mapIEDFilterType.count(Cur_Parse_IED_Name_.at(0)) == 1)
+    if(mapIedType.count(Cur_Parse_IED_Name_.at(0)) == 1)
     {
-        mapIedData[Cur_Parse_IED_Name_].Type_ = mapIEDFilterType[Cur_Parse_IED_Name_.at(0)];
+        mapIedData[Cur_Parse_IED_Name_].Type_ = mapIedType[Cur_Parse_IED_Name_.at(0)];
     }
     mapIedData[Cur_Parse_IED_Name_].Manu_ = xmlReader.attributes().value("manufacturer").toString();
     mapIedData[Cur_Parse_IED_Name_].Model_ = xmlReader.attributes().value("type").toString();
@@ -350,8 +360,7 @@ void ScdToData::parseDO(QXmlStreamReader &xmlReader,QList<stDO*> &listDO)
 void ScdToData::parseDOType(QXmlStreamReader &xmlReader)
 {
     Cur_Parse_DOType_id_ = xmlReader.attributes().value("id").toString();      //保存当前解析DOType的id
-    xmlReader.attributes().value("cdc").toString();
-
+    mapDOTypeCdc.insert(Cur_Parse_DOType_id_, xmlReader.attributes().value("cdc").toString());
     QList<stDA*> listDA;
     while(!(xmlReader.tokenType() == QXmlStreamReader::EndElement && xmlReader.name() == "DOType"))
     {
@@ -478,6 +487,7 @@ void ScdToData::formPointTable(QList<QString> &lstErrors)
 
 void ScdToData::initDOType(QString DO_id, QString FCDA)
 {
+    Cur_Parse_DOType_id_ = DO_id;
     QList<stDA*>listDA = mapDOType_DA[DO_id];
     for(int i = 0; i < listDA.size(); ++i)
     {
@@ -490,7 +500,7 @@ void ScdToData::initDOType(QString DO_id, QString FCDA)
         }
         else
         {
-            Cur_Parse_DA_Type_ = DA->bType_;                            // 解析SDO的数据
+            Cur_Parse_DA_Type_ = DA->bType_;                            // 解析DA的数据
             if(tmpFCDA.contains("myFC"))
             {
                 tmpFCDA.replace(tmpFCDA.indexOf("myFC"),4, DA->fc_);
@@ -507,6 +517,7 @@ void ScdToData::initDOType(QString DO_id, QString FCDA)
                 pFCDA->ied_ = Cur_Parse_IED_Name_;
                 pFCDA->type_ = Cur_Parse_DA_Type_;
                 pFCDA->do_ = Cur_Parse_DO_Name_;
+                pFCDA->pointType_ = mapDOTypeCdc[Cur_Parse_DOType_id_];
                 mapAllFCDA.insert(tmpFCDA,pFCDA);            //保存所有的FCDA
             }
         }
@@ -530,7 +541,8 @@ void ScdToData::initDAType(QString DA_id, QString FCDA)
             pFCDA->desc_ =  Cur_Parse_LN_Desc_ + "/" + Cur_Parse_DO_Desc_;
             pFCDA->ied_ = Cur_Parse_IED_Name_;
             pFCDA->type_ = Cur_Parse_DA_Type_;
-             pFCDA->do_ = Cur_Parse_DO_Name_;
+            pFCDA->do_ = Cur_Parse_DO_Name_;
+            pFCDA->pointType_ = mapDOTypeCdc[Cur_Parse_DOType_id_];
             mapAllFCDA.insert(FCDA + "$" + BDA->name_,pFCDA);            //保存所有的FCDA
         }
     }
@@ -543,7 +555,7 @@ void ScdToData::writePointDataToFile(QList<QString> &lstErrors)
     for(  ; itFCDA != mapAllFCDA.end(); ++itFCDA)
     {
         stFCDA* pFCDA = itFCDA.value();
-        if(mapFCFilterType.count(itFCDA.key().split("$").at(1)) == 0)
+        if(mapFilterFcType.count(itFCDA.key().split("$").at(1)) == 0)
         {
             continue;
         }
@@ -558,7 +570,7 @@ void ScdToData::writePointDataToFile(QList<QString> &lstErrors)
         pointData.Type_ = pFCDA->type_;
         pointData.DoName_ = pFCDA->do_;
         pointData.iedName_ = pFCDA->ied_;
-        pointData.DataType_ = pFCDA->type_;
+        pointData.pointType_ = pFCDA->pointType_;
 
         mapPointData[pFCDA->ied_].push_back(pointData);
         ++i;

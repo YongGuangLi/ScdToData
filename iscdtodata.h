@@ -35,7 +35,7 @@ struct PointData
     QString Type_;
     QString DoName_;
     QString iedName_;
-    QString DataType_;      // YC or YX
+    QString pointType_;      // 遥测 or 遥信
 };
 
 class IScdToData : public QObject

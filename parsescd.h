@@ -60,6 +60,7 @@ typedef struct
     QString type_;
     QString ied_;
     QString do_;
+    QString pointType_;      // 遥测 or 遥信
 }stFCDA;
 
 class ScdToData : public IScdToData
@@ -121,6 +122,7 @@ private:
     QMap<QString,stLN*> mapAllLNode;
     QMap<QString,stAddress> mapAddress;
     QMap<QString,QString> mapAllLNode_IED;
+    QMap<QString,QString> mapDOTypeCdc;         //数据对象id和对应的cdc  用于判断此数据对象是遥测还是遥信
     QMap<QString,QList<stDO*>> mapLNodeType_DO;
     QMap<QString,QList<stDA*>> mapDOType_DA;
     QMap<QString,QList<stBDA*>> mapDAType_DBA;
@@ -129,8 +131,9 @@ private:
 
     QMap<QString,stFCDA*> mapAllFCDA;
 
-    QMap<QString,QString> mapFCFilterType;
-    QMap<QString,QString> mapIEDFilterType;
+    QMap<QString,QString> mapFilterFcType;
+    QMap<QString,QString> mapIedType;
+    QMap<QString,QString> mapCdcType;
 
     QMap<QString,stIedData> mapIedData;
     QMap<QString,QList<stPointData>> mapPointData;
