@@ -14,6 +14,8 @@
 #include <QDateTime>
 #include "iscdtodata.h"
 
+typedef struct Address stAddress;
+
 typedef struct
 {
    QString name_;
@@ -36,11 +38,13 @@ typedef struct
     QString type_;
 }stBDA;
 
-typedef struct
+ struct Address
 {
+     Address():IpA_("127.0.0.1")
+     {}
     QString IpA_;
     QString IpB_;
-}stAddress;
+};
 
 typedef struct
 {

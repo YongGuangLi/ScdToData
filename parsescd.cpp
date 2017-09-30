@@ -28,9 +28,9 @@ int ScdToData::ConvertScd2Data(QString csScdFile, QString csInitFile, QList<QStr
     QFile *file = new QFile(csScdFile);
     if(!file->open(QFile::ReadOnly | QFile::Text))
     {
+        lstErrors.push_back(csScdFile + " open fail");
         return -1;
     }
-
     QXmlStreamReader xmlReader(file);
     while(!xmlReader.atEnd() && !xmlReader.hasError())
     {
@@ -55,11 +55,11 @@ int ScdToData::ConvertScd2Data(QString csScdFile, QString csInitFile, QList<QStr
             }
         }
     }
-
     formPointTable(lstErrors);                 //把读取到的数据组成点表
     writePointDataToFile(lstErrors);        //点表数据组成所需结构
     xmlReader.clear();
     file->close();
+    qDebug()<<"succed";
     return 0;
 }
 
@@ -211,7 +211,7 @@ void ScdToData::parseServer(QXmlStreamReader &xmlReader)
     {
         if(xmlReader.tokenType() == QXmlStreamReader::StartElement && xmlReader.name() == "LDevice")
         {
-                parseLDevice(xmlReader);
+            parseLDevice(xmlReader);
         }
         xmlReader.readNext();
     }
@@ -252,6 +252,7 @@ void ScdToData::parseLN(QXmlStreamReader &xmlReader)
      pLN->desc_ = desc;
      pLN->ied_ = Cur_Parse_IED_Name_;
      pLN->lnType_ = lnType;
+
      mapAllLNode.insert(Cur_Parse_IED_Name_ + Cur_Parse_LDevice_Inst_ + "/" + prefix + lnClass + inst,pLN);
 }
 
@@ -586,6 +587,7 @@ void ScdToData::writePointDataToFile(QList<QString> &lstErrors)
     listAllRptCntl.clear();
     mapAllLNode_IED.clear();
     mapAllLNode.clear();
+    lstErrors.push_back("succed");
 }
 
 extern "C" SCDTODATA_API  IScdToData* CreateModule(void* pIService)
