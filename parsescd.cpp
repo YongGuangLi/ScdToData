@@ -1,6 +1,10 @@
-#include "parsescd.h"
+﻿#include "parsescd.h"
 
 ScdToData::ScdToData()
+{
+}
+
+ScdToData::~ScdToData()
 {
 }
 
@@ -53,7 +57,7 @@ int ScdToData::ConvertScd2Data(QString csScdFile, QString csInitFile, QList<QStr
     }
 
     formPointTable(lstErrors);                 //把读取到的数据组成点表
-    writePointDataToFile(lstErrors);        //点表数据写入文件
+    writePointDataToFile(lstErrors);        //点表数据组成所需结构
     xmlReader.clear();
     file->close();
     return 0;
@@ -164,13 +168,16 @@ void ScdToData::parseIED(QXmlStreamReader &xmlReader)
     mapIedData[Cur_Parse_IED_Name_].IpA_ = mapAddress[Cur_Parse_IED_Name_].IpA_;
      mapIedData[Cur_Parse_IED_Name_].IpB_ = mapAddress[Cur_Parse_IED_Name_].IpB_;
 
-    if(mapIedData[Cur_Parse_IED_Name_].IpB_.isEmpty())         //如果B网不存在，把A网的第三个字段加1
+    if(mapIedData[Cur_Parse_IED_Name_].IpB_.isEmpty())         //如果B网不存在，把A网的第二个字段加1
     {
         QStringList tmpList = mapIedData[Cur_Parse_IED_Name_].IpA_.split(".");
         tmpList[1]  = QString::number(tmpList.at(1).toInt() + 1);
         mapIedData[Cur_Parse_IED_Name_].IpB_ = tmpList.join(".");
     }
-    mapIedData[Cur_Parse_IED_Name_].Type_ = "1";
+    if(mapIEDFilterType.count(Cur_Parse_IED_Name_.at(0)) == 1)
+    {
+        mapIedData[Cur_Parse_IED_Name_].Type_ = mapIEDFilterType[Cur_Parse_IED_Name_.at(0)];
+    }
     mapIedData[Cur_Parse_IED_Name_].Manu_ = xmlReader.attributes().value("manufacturer").toString();
     mapIedData[Cur_Parse_IED_Name_].Model_ = xmlReader.attributes().value("type").toString();
     mapIedData[Cur_Parse_IED_Name_].Config_ = xmlReader.attributes().value("configVersion").toString();
@@ -555,6 +562,26 @@ void ScdToData::writePointDataToFile(QList<QString> &lstErrors)
         mapPointData[pFCDA->ied_].push_back(pointData);
         ++i;
     }
+
+    QMap<QString,QList<stPointData>>::iterator itPointData = mapPointData.begin();
+    for( ; itPointData != mapPointData.end(); ++itPointData)
+    {
+        stPointData pointData;
+        pointData.RedisAddr_ = itPointData.key() + QString("_00057");
+        pointData.Desc_ =  QString::fromLocal8Bit("A网状态");
+        pointData.DoName_ = "Alm4";
+        pointData.Name_ = itPointData.key() + QString("LD0/GGIO0$ST$Alm4$stVal");
+        pointData.Type_ = "BOOLEAN";
+
+        mapPointData[itPointData.key()].push_back(pointData);        
+        pointData.RedisAddr_ = itPointData.key() + QString("_00061");
+        pointData.Desc_ =  QString::fromLocal8Bit("B网状态");
+        pointData.DoName_ = "Alm5";
+        pointData.Name_ = itPointData.key() + QString("LD0/GGIO0$ST$Alm5$stVal");
+
+        mapPointData[itPointData.key()].push_back(pointData);
+    }
+
     mapAllFCDA.clear();
     listAllRptCntl.clear();
     mapAllLNode_IED.clear();

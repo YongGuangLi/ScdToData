@@ -63,6 +63,7 @@ class ScdToData : public IScdToData
     Q_OBJECT
 public:
     explicit ScdToData();
+    ~ScdToData();
     QMap<QString,stIedData> GetIedData();
     QMap<QString,QList<stPointData>> GetPointData();
     int ConvertScd2Data(QString csScdFile,QString csInitFile,QList<QString> &lstErrors);
