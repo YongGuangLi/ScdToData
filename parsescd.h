@@ -21,7 +21,6 @@ typedef struct
    QString desc_;
 }stDO;
 
-
 typedef struct
 {
     QString name_;
@@ -37,6 +36,11 @@ typedef struct
     QString type_;
 }stBDA;
 
+typedef struct
+{
+    QString IpA_;
+    QString IpB_;
+}stAddress;
 
 typedef struct
 {
@@ -110,6 +114,7 @@ private:
     QString Cur_Parse_DO_Desc_;
 
     QMap<QString,stLN*> mapAllLNode;
+    QMap<QString,stAddress> mapAddress;
     QMap<QString,QString> mapAllLNode_IED;
     QMap<QString,QList<stDO*>> mapLNodeType_DO;
     QMap<QString,QList<stDA*>> mapDOType_DA;

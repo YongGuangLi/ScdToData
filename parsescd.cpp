@@ -142,13 +142,13 @@ void ScdToData::parseAddress(QXmlStreamReader &xmlReader)
             if(xmlReader.attributes().value("type").toString() == QStringLiteral("IP"))
             {
                 xmlReader.readNext();
-                if(mapIedData.count(Cur_Parse_IED_Name_) == 0)
+                if(mapAddress.count(Cur_Parse_IED_Name_) == 0)
                 {
-                    mapIedData[Cur_Parse_IED_Name_].IpA_ = xmlReader.text().toString();
+                    mapAddress[Cur_Parse_IED_Name_].IpA_ = xmlReader.text().toString();
                 }
                 else
                 {
-                    mapIedData[Cur_Parse_IED_Name_].IpB_ = xmlReader.text().toString();
+                    mapAddress[Cur_Parse_IED_Name_].IpB_ = xmlReader.text().toString();
                 }
             }
         }
@@ -161,6 +161,9 @@ void ScdToData::parseAddress(QXmlStreamReader &xmlReader)
 void ScdToData::parseIED(QXmlStreamReader &xmlReader)
 {
     Cur_Parse_IED_Name_ = xmlReader.attributes().value("name").toString();  //保存当前解析IED的name
+    mapIedData[Cur_Parse_IED_Name_].IpA_ = mapAddress[Cur_Parse_IED_Name_].IpA_;
+     mapIedData[Cur_Parse_IED_Name_].IpB_ = mapAddress[Cur_Parse_IED_Name_].IpB_;
+
     if(mapIedData[Cur_Parse_IED_Name_].IpB_.isEmpty())         //如果B网不存在，把A网的第三个字段加1
     {
         QStringList tmpList = mapIedData[Cur_Parse_IED_Name_].IpA_.split(".");
@@ -532,6 +535,10 @@ void ScdToData::writePointDataToFile(QList<QString> &lstErrors)
     for(  ; itFCDA != mapAllFCDA.end(); ++itFCDA)
     {
         stFCDA* pFCDA = itFCDA.value();
+        if(mapFCFilterType.count(itFCDA.key().split("$").at(1)) == 0)
+        {
+            continue;
+        }
         stPointData pointData;
         if(mapPointData.count(pFCDA->ied_ ) == 0)
         {

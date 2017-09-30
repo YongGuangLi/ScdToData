@@ -10,7 +10,7 @@ typedef struct IedData stIedData;
 typedef struct PointData stPointData;
 struct IedData
 {
-    IedData():PortA_(102),PortB_(102)
+    IedData():PortA_(102),PortB_(102),Type_("6")
     {}
     int PortA_;
     int PortB_;
