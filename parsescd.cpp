@@ -6,6 +6,7 @@ ScdToData::ScdToData()
 
 ScdToData::~ScdToData()
 {
+
 }
 
 QMap<QString, stIedData> ScdToData::GetIedData()
@@ -59,7 +60,6 @@ int ScdToData::ConvertScd2Data(QString csScdFile, QString csInitFile, QList<QStr
     writePointDataToFile(lstErrors);        //点表数据组成所需结构
     xmlReader.clear();
     file->close();
-    qDebug()<<"succed";
     return 0;
 }
 
@@ -101,7 +101,6 @@ int ScdToData::InitCfgFile(QString csInitFile,QList<QString> &lstErrors)
                 qDebug()<<settings->value(CdcTypekeys.at(i)).toString();
             }
             settings->endGroup();
-
         }
         file.close();
         return 1;
@@ -599,7 +598,6 @@ void ScdToData::writePointDataToFile(QList<QString> &lstErrors)
     listAllRptCntl.clear();
     mapAllLNode_IED.clear();
     mapAllLNode.clear();
-    lstErrors.push_back("succed");
 }
 
 extern "C" SCDTODATA_API  IScdToData* CreateModule(void* pIService)
