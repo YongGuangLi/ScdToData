@@ -516,7 +516,8 @@ void ScdToData::initDOType(QString DO_id, QString FCDA)
                 pFCDA->ied_ = Cur_Parse_IED_Name_;
                 pFCDA->type_ = Cur_Parse_DA_Type_;
                 pFCDA->do_ = Cur_Parse_DO_Name_;
-                pFCDA->pointType_ = mapDOTypeCdc[Cur_Parse_DOType_id_];
+                QString cdC = mapDOTypeCdc[Cur_Parse_DOType_id_];
+                pFCDA->pointType_ = mapCdcType[cdC];
                 mapAllFCDA.insert(tmpFCDA,pFCDA);            //保存所有的FCDA
             }
         }
@@ -541,7 +542,8 @@ void ScdToData::initDAType(QString DA_id, QString FCDA)
             pFCDA->ied_ = Cur_Parse_IED_Name_;
             pFCDA->type_ = Cur_Parse_DA_Type_;
             pFCDA->do_ = Cur_Parse_DO_Name_;
-            pFCDA->pointType_ = mapDOTypeCdc[Cur_Parse_DOType_id_];
+            QString cdC = mapDOTypeCdc[Cur_Parse_DOType_id_];
+            pFCDA->pointType_ = mapCdcType[cdC];
             mapAllFCDA.insert(FCDA + "$" + BDA->name_,pFCDA);            //保存所有的FCDA
         }
     }
@@ -570,7 +572,6 @@ void ScdToData::writePointDataToFile(QList<QString> &lstErrors)
         pointData.DoName_ = pFCDA->do_;
         pointData.iedName_ = pFCDA->ied_;
         pointData.pointType_ = pFCDA->pointType_;
-
         mapPointData[pFCDA->ied_].push_back(pointData);
         ++i;
     }
