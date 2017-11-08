@@ -6,7 +6,8 @@ ScdToData::ScdToData()
 
 ScdToData::~ScdToData()
 {
-
+    mapIedData.clear();
+    mapPointData.clear();
 }
 
 QMap<QString, stIedData> ScdToData::GetIedData()
@@ -98,7 +99,6 @@ int ScdToData::InitCfgFile(QString csInitFile,QList<QString> &lstErrors)
             for(int i = 0; i < CdcTypekeys.size(); ++i)
             {
                 mapCdcType[CdcTypekeys.at(i)] = settings->value(CdcTypekeys.at(i)).toString();
-                qDebug()<<settings->value(CdcTypekeys.at(i)).toString();
             }
             settings->endGroup();
         }
@@ -175,7 +175,7 @@ void ScdToData::parseIED(QXmlStreamReader &xmlReader)
 {
     Cur_Parse_IED_Name_ = xmlReader.attributes().value("name").toString();  //保存当前解析IED的name
     mapIedData[Cur_Parse_IED_Name_].IpA_ = mapAddress[Cur_Parse_IED_Name_].IpA_;
-     mapIedData[Cur_Parse_IED_Name_].IpB_ = mapAddress[Cur_Parse_IED_Name_].IpB_;
+    mapIedData[Cur_Parse_IED_Name_].IpB_ = mapAddress[Cur_Parse_IED_Name_].IpB_;
 
     if(mapIedData[Cur_Parse_IED_Name_].IpB_.isEmpty())         //如果B网不存在，把A网的第二个字段加1
     {
@@ -456,32 +456,6 @@ void ScdToData::formPointTable(QList<QString> &lstErrors)
             initDOType(DO->type_,it.key() + "$myFC$" + DO->name_);
         }
     }
-
-    //清除之前保存的数据，清空内存
-    for(QMap<QString,QList<stDO*>>::iterator it = mapLNodeType_DO.begin(); it != mapLNodeType_DO.end(); ++it)
-    {
-        QList<stDO*> listDO = it.value();
-        qDeleteAll(listDO);
-        listDO.clear();
-    }
-    mapLNodeType_DO.clear();
-
-    for(QMap<QString,QList<stDA*>>::iterator it = mapDOType_DA.begin(); it != mapDOType_DA.end(); ++it)
-    {
-        QList<stDA*> listDA = it.value();
-        qDeleteAll(listDA);
-        listDA.clear();
-    }
-    mapDOType_DA.clear();
-
-    for(QMap<QString,QList<stBDA*>>::iterator it = mapDAType_DBA.begin(); it != mapDAType_DBA.end(); ++it)
-    {
-        QList<stBDA*> listBDA = it.value();
-        qDeleteAll(listBDA);
-        listBDA.clear();
-    }
-    mapDAType_DBA.clear();
-
 }
 
 void ScdToData::initDOType(QString DO_id, QString FCDA)
@@ -595,10 +569,56 @@ void ScdToData::writePointDataToFile(QList<QString> &lstErrors)
         mapPointData[itPointData.key()].push_back(pointData);
     }
 
-    mapAllFCDA.clear();
-    listAllRptCntl.clear();
-    mapAllLNode_IED.clear();
+    //清除之前保存的数据，清空内存
+    for(  QMap<QString,stLN*>::iterator it = mapAllLNode.begin(); it != mapAllLNode.end(); ++it)
+    {
+        delete it.value();
+    }
     mapAllLNode.clear();
+
+    mapAddress.clear();
+
+    mapAllLNode_IED.clear();
+
+    mapDOTypeCdc.clear();
+
+    for(QMap<QString,QList<stDO*>>::iterator it = mapLNodeType_DO.begin(); it != mapLNodeType_DO.end(); ++it)
+    {
+        QList<stDO*> listDO = it.value();
+        qDeleteAll(listDO);
+        listDO.clear();
+    }
+    mapLNodeType_DO.clear();
+
+    for(QMap<QString,QList<stDA*>>::iterator it = mapDOType_DA.begin(); it != mapDOType_DA.end(); ++it)
+    {
+        QList<stDA*> listDA = it.value();
+        qDeleteAll(listDA);
+        listDA.clear();
+    }
+    mapDOType_DA.clear();
+
+    for(QMap<QString,QList<stBDA*>>::iterator it = mapDAType_DBA.begin(); it != mapDAType_DBA.end(); ++it)
+    {
+        QList<stBDA*> listBDA = it.value();
+        qDeleteAll(listBDA);
+        listBDA.clear();
+    }
+    mapDAType_DBA.clear();
+
+    listAllRptCntl.clear();
+
+    for( QMap<QString,stFCDA*>::iterator it = mapAllFCDA.begin() ; it != mapAllFCDA.end(); ++it)
+    {
+        delete it.value();
+    }
+    mapAllFCDA.clear();
+
+    mapFilterFcType.clear();
+
+    mapIedType.clear();
+
+    mapCdcType.clear();
 }
 
 extern "C" SCDTODATA_API  IScdToData* CreateModule(void* pIService)
@@ -611,6 +631,8 @@ extern "C" SCDTODATA_API void DeleteModule(IScdToData* pModule)
 {
     if(pModule == NULL)
         return ;
+
     delete (ScdToData*)pModule;
+    pModule = NULL;
 }
 

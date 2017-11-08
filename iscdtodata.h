@@ -42,6 +42,7 @@ class IScdToData : public QObject
 {
     Q_OBJECT
 public:
+    virtual ~IScdToData(){}
     virtual int ConvertScd2Data(QString csScdFile,QString csInitFile,QList<QString> &lstErrors) = 0;
     virtual QMap<QString,stIedData> GetIedData() = 0;
     virtual QMap<QString,QList<stPointData>> GetPointData() = 0;
@@ -61,3 +62,4 @@ extern "C"
 
 
 #endif // ICIDTODATAH_H
+

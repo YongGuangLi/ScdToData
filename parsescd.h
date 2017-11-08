@@ -40,7 +40,7 @@ typedef struct
 
  struct Address
 {
-     Address():IpA_("127.0.0.1")
+     Address():IpA_("192.13.0.0")
      {}
     QString IpA_;
     QString IpB_;
