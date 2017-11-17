@@ -32,10 +32,10 @@ struct PointData
     QString RedisAddr_;
     QString Name_;
     QString Desc_;               //逻辑节点描述/数据对象描述
-    QString Type_;
+    QString Type_;               //数据属性类型
     QString DoName_;
     QString iedName_;
-    QString pointType_;      // 遥测 or 遥信
+    QString pointType_;          //遥测 or 遥信
 };
 
 class IScdToData : public QObject

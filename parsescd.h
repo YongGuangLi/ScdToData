@@ -134,6 +134,7 @@ private:
     QMap<QString,QString> mapFilterFcType;
     QMap<QString,QString> mapIedType;
     QMap<QString,QString> mapCdcType;
+    QMap<QString,int> mapDaType;
 
     QMap<QString,stIedData> mapIedData;
     QMap<QString,QList<stPointData>> mapPointData;

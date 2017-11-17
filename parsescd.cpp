@@ -86,6 +86,14 @@ int ScdToData::InitCfgFile(QString csInitFile,QList<QString> &lstErrors)
             }
             settings->endGroup();
 
+            settings->beginGroup("TYPE");
+            QStringList DaTypekeys = settings->allKeys();
+            for(int i = 0; i < DaTypekeys.size(); ++i)
+            {
+                mapDaType[DaTypekeys.at(i)] = settings->value(DaTypekeys.at(i)).toInt();
+            }
+            settings->endGroup();
+
             settings->beginGroup("IEDTYPE");
             QStringList IEDTypekeys = settings->allKeys();
             for(int i = 0; i < IEDTypekeys.size(); ++i)
@@ -439,8 +447,8 @@ void ScdToData::formPointTable(QList<QString> &lstErrors)
     {
         stLN* pLN =  it.value();
         QList<stDO*> listDO = mapLNodeType_DO[pLN->lnType_];          //找到逻辑节点下的所有数据对象
-        Cur_Parse_IED_Name_ = pLN ->ied_;             //当前逻辑节点所属IED名字
-        Cur_Parse_LN_Desc_ = pLN->desc_;              //当前逻辑节点描述
+        Cur_Parse_IED_Name_ = pLN ->ied_;                                         //当前逻辑节点所属IED名字
+        Cur_Parse_LN_Desc_ = pLN->desc_;                                           //当前逻辑节点描述
         for(int i = 0; i < listDO.size(); ++i)
         {
             stDO *DO = listDO.at(i);
@@ -486,7 +494,8 @@ void ScdToData::initDOType(QString DO_id, QString FCDA)
             else
             {
                 stFCDA *pFCDA = new stFCDA();
-                pFCDA->desc_ = Cur_Parse_LN_Desc_ + "/" + Cur_Parse_DO_Desc_;
+              //  pFCDA->desc_ = Cur_Parse_LN_Desc_ + "/" + Cur_Parse_DO_Desc_;
+                pFCDA->desc_ =  Cur_Parse_DO_Desc_;
                 pFCDA->ied_ = Cur_Parse_IED_Name_;
                 pFCDA->type_ = Cur_Parse_DA_Type_;
                 pFCDA->do_ = Cur_Parse_DO_Name_;
@@ -512,7 +521,8 @@ void ScdToData::initDAType(QString DA_id, QString FCDA)
         {
             Cur_Parse_DA_Type_ = BDA->bType_;        //当前BDA的类型
             stFCDA *pFCDA = new stFCDA();
-            pFCDA->desc_ =  Cur_Parse_LN_Desc_ + "/" + Cur_Parse_DO_Desc_;
+            //pFCDA->desc_ =  Cur_Parse_LN_Desc_ + "/" + Cur_Parse_DO_Desc_;
+            pFCDA->desc_ =   Cur_Parse_DO_Desc_;
             pFCDA->ied_ = Cur_Parse_IED_Name_;
             pFCDA->type_ = Cur_Parse_DA_Type_;
             pFCDA->do_ = Cur_Parse_DO_Name_;
@@ -525,15 +535,18 @@ void ScdToData::initDAType(QString DA_id, QString FCDA)
 
 void ScdToData::writePointDataToFile(QList<QString> &lstErrors)
 {
+    Q_UNUSED(lstErrors);
+
     QMap<QString,stFCDA*>::iterator itFCDA = mapAllFCDA.begin();
     int i = 1;
     for(  ; itFCDA != mapAllFCDA.end(); ++itFCDA)
     {
         stFCDA* pFCDA = itFCDA.value();
-        if(mapFilterFcType.count(itFCDA.key().split("$").at(1)) == 0)
+        if(mapFilterFcType.count(itFCDA.key().split("$").at(1)) == 0 || mapDaType.value(pFCDA->type_,0) == 0)
         {
             continue;
         }
+
         stPointData pointData;
         if(mapPointData.count(pFCDA->ied_ ) == 0)
         {
