@@ -113,7 +113,7 @@ int ScdToData::InitCfgFile(QString csInitFile,QList<QString> &lstErrors)
         file.close();
         return 1;
     }
-   lstErrors.push_back("not find inifile");
+    lstErrors.push_back(csInitFile + " not find");
     return -1;
 }
 
@@ -477,7 +477,7 @@ void ScdToData::initDOType(QString DO_id, QString FCDA)
         //因为DA结构保存了DA元素和SDO元素的数据，SDO没有FC，DA有FC
         if(DA->fc_.isEmpty())
         {
-            initDOType(DA->type_, FCDA + "/" + DA->name_);        // 解析SDO的数据
+            initDOType(DA->type_, FCDA + "$" + DA->name_);        // 解析SDO的数据
         }
         else
         {
