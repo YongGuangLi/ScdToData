@@ -58,7 +58,7 @@ int ScdToData::ConvertScd2Data(QString csScdFile, QString csInitFile, QList<QStr
         }
     }
     formPointTable(lstErrors);                 //把读取到的数据组成点表
-    writePointDataToFile(lstErrors);        //点表数据组成所需结构
+    writePointDataToFile(lstErrors);           //点表数据组成所需结构
     xmlReader.clear();
     file->close();
     return 0;
@@ -455,11 +455,11 @@ void ScdToData::formPointTable(QList<QString> &lstErrors)
             Cur_Parse_DO_Name_ = DO->name_;
             if(pLN->mapDOI.count(DO->name_) == 1)
             {
-                  Cur_Parse_DO_Desc_ = pLN->mapDOI[DO->name_];             //当前DO的desc;
+                Cur_Parse_DO_Desc_ = pLN->mapDOI[DO->name_];             //当前DO的desc;
             }
             else
             {
-                  Cur_Parse_DO_Desc_ = DO->desc_;                                       //当前DO的desc;
+                Cur_Parse_DO_Desc_ = DO->desc_;                                       //当前DO的desc;
             }
             initDOType(DO->type_,it.key() + "$myFC$" + DO->name_);
         }
@@ -484,8 +484,21 @@ void ScdToData::initDOType(QString DO_id, QString FCDA)
             Cur_Parse_DA_Type_ = DA->bType_;                            // 解析DA的数据
             if(tmpFCDA.contains("myFC"))
             {
-                tmpFCDA.replace(tmpFCDA.indexOf("myFC"),4, DA->fc_);
+                tmpFCDA.replace(tmpFCDA.indexOf("myFC"), 4, DA->fc_);
             }
+
+            if(DA->fc_ == "CO")                        //遥控只解析到数据对象
+            {
+                stFCDA *pFCDA = new stFCDA();
+                pFCDA->desc_ =  Cur_Parse_DO_Desc_;
+                pFCDA->ied_ = Cur_Parse_IED_Name_;
+                pFCDA->type_ = Cur_Parse_DA_Type_;
+                pFCDA->do_ = Cur_Parse_DO_Name_;
+                pFCDA->cdc_ = mapDOTypeCdc[Cur_Parse_DOType_id_];
+                mapAllFCDA.insert(tmpFCDA,pFCDA);            //保存所有的FCDA
+                continue;
+            }
+
             tmpFCDA += "$" + DA->name_;
             if(DA->bType_ == QString("Struct"))          //如果数据属性的类型是Struct,进一步解析数据属性的类型
             {
@@ -494,13 +507,11 @@ void ScdToData::initDOType(QString DO_id, QString FCDA)
             else
             {
                 stFCDA *pFCDA = new stFCDA();
-              //  pFCDA->desc_ = Cur_Parse_LN_Desc_ + "/" + Cur_Parse_DO_Desc_;
                 pFCDA->desc_ =  Cur_Parse_DO_Desc_;
                 pFCDA->ied_ = Cur_Parse_IED_Name_;
                 pFCDA->type_ = Cur_Parse_DA_Type_;
                 pFCDA->do_ = Cur_Parse_DO_Name_;
-                QString cdC = mapDOTypeCdc[Cur_Parse_DOType_id_];
-                pFCDA->pointType_ = mapCdcType[cdC];
+                pFCDA->cdc_ = mapDOTypeCdc[Cur_Parse_DOType_id_];
                 mapAllFCDA.insert(tmpFCDA,pFCDA);            //保存所有的FCDA
             }
         }
@@ -526,8 +537,7 @@ void ScdToData::initDAType(QString DA_id, QString FCDA)
             pFCDA->ied_ = Cur_Parse_IED_Name_;
             pFCDA->type_ = Cur_Parse_DA_Type_;
             pFCDA->do_ = Cur_Parse_DO_Name_;
-            QString cdC = mapDOTypeCdc[Cur_Parse_DOType_id_];
-            pFCDA->pointType_ = mapCdcType[cdC];
+            pFCDA->cdc_ = mapDOTypeCdc[Cur_Parse_DOType_id_];
             mapAllFCDA.insert(FCDA + "$" + BDA->name_,pFCDA);            //保存所有的FCDA
         }
     }
@@ -546,19 +556,48 @@ void ScdToData::writePointDataToFile(QList<QString> &lstErrors)
         {
             continue;
         }
+        if(itFCDA.key().contains("$ST$"))
+        {
+            if(!itFCDA.key().contains("$stVal") && !itFCDA.key().contains("$general") && !itFCDA.key().contains("$posVal"))
+            {
+                continue;
+            }
+        }
 
         stPointData pointData;
         if(mapPointData.count(pFCDA->ied_ ) == 0)
         {
             i = 1;
         }
+
         pointData.RedisAddr_ = pFCDA->ied_ + "_" + QString::number(i);
         pointData.Name_ = itFCDA.key();
         pointData.Desc_ = pFCDA->desc_;
         pointData.Type_ = pFCDA->type_;
         pointData.DoName_ = pFCDA->do_;
         pointData.iedName_ = pFCDA->ied_;
-        pointData.pointType_ = pFCDA->pointType_;
+
+        if(itFCDA.key().contains("$ST$") && pFCDA->cdc_ == "SPC")
+        {
+            pointData.pointType_ = QString::fromLocal8Bit("遥信");
+        }
+        else if(itFCDA.key().contains("$CO$") && pFCDA->cdc_ == "BSC")
+        {
+            pointData.pointType_ = QString::fromLocal8Bit("遥控");
+        }
+        else if(itFCDA.key().contains("$CO$") && pFCDA->cdc_ == "ISC")
+        {
+            pointData.pointType_ = QString::fromLocal8Bit("遥控");
+        }
+        else if(itFCDA.key().contains("$ST$") && pFCDA->cdc_ == "DPC")
+        {
+            pointData.pointType_ = QString::fromLocal8Bit("遥信");
+        }
+        else
+        {
+            pointData.pointType_ = mapCdcType[pFCDA->cdc_];
+        }
+
         mapPointData[pFCDA->ied_].push_back(pointData);
         ++i;
     }
@@ -572,13 +611,14 @@ void ScdToData::writePointDataToFile(QList<QString> &lstErrors)
         pointData.DoName_ = "Alm4";
         pointData.Name_ = itPointData.key() + QString("LD0/GGIO0$ST$Alm4$stVal");
         pointData.Type_ = "BOOLEAN";
+        pointData.pointType_ = QString::fromLocal8Bit("遥信");
+        mapPointData[itPointData.key()].push_back(pointData);
 
-        mapPointData[itPointData.key()].push_back(pointData);        
         pointData.RedisAddr_ = itPointData.key() + QString("_00061");
         pointData.Desc_ =  QString::fromLocal8Bit("B网状态");
         pointData.DoName_ = "Alm5";
         pointData.Name_ = itPointData.key() + QString("LD0/GGIO0$ST$Alm5$stVal");
-
+        pointData.pointType_ = QString::fromLocal8Bit("遥信");
         mapPointData[itPointData.key()].push_back(pointData);
     }
 
